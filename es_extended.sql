@@ -12,7 +12,7 @@ ALTER TABLE `users`
 CREATE TABLE `items` (
 	`name` varchar(50) NOT NULL,
 	`label` varchar(50) NOT NULL,
-	`limit` int(11) NOT NULL DEFAULT '-1',
+	`weight` int(11) NOT NULL DEFAULT '-1',
 	`rare` int(11) NOT NULL DEFAULT '0',
 	`can_remove` int(11) NOT NULL DEFAULT '1',
 
