@@ -5,6 +5,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	self.accounts     = accounts
 	self.inventory    = inventory
 	self.job          = job
+	self.job2         = job2
 	self.loadout      = loadout
 	self.name         = name
 	self.lastPosition = lastPosition
@@ -22,6 +23,8 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 
 		if money >= 0 then
 			self.player.setMoney(money)
+		else
+			print(('es_extended: %s attempted exploiting! (reason: player tried setting -1 cash balance)'):format(self.identifier))
 		end
 	end
 
@@ -34,9 +37,11 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 
 		if money >= 0 then
 			self.player.setBankBalance(money)
+		else
+			print(('es_extended: %s attempted exploiting! (reason: player tried setting -1 bank balance)'):format(self.identifier))
 		end
 	end
-
+	
 	self.getBank = function()
 		return self.player.get('bank')
 	end
@@ -65,30 +70,38 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 
 		if money >= 0 then
 			self.player.addMoney(money)
+		else
+			print(('es_extended: %s attempted exploiting! (reason: player tried adding -1 cash balance)'):format(self.identifier))
 		end
 	end
 
 	self.removeMoney = function(money)
 		money = ESX.Math.Round(money)
 
-		if money > 0 then
+		if money >= 0 then
 			self.player.removeMoney(money)
+		else
+			print(('es_extended: %s attempted exploiting! (reason: player tried removing -1 cash balance)'):format(self.identifier))
 		end
 	end
 
 	self.addBank = function(money)
 		money = ESX.Math.Round(money)
 
-		if money > 0 then
+		if money >= 0 then
 			self.player.addBank(money)
+		else
+			print(('es_extended: %s attempted exploiting! (reason: player tried adding -1 bank balance)'):format(self.identifier))
 		end
 	end
 
 	self.removeBank = function(money)
 		money = ESX.Math.Round(money)
 
-		if money > 0 then
+		if money >= 0 then
 			self.player.removeBank(money)
+		else
+			print(('es_extended: %s attempted exploiting! (reason: player tried removing -1 bank balance)'):format(self.identifier))
 		end
 	end
 
@@ -182,7 +195,8 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		return self.job
 	end
 
-	self.getJob2 = function()
+	---SECONDJOB INCLUDED
+    self.getJob2 = function()
         return self.job2
     end
 
@@ -214,7 +228,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 
 	self.getMissingAccounts = function(cb)
 		MySQL.Async.fetchAll('SELECT name FROM user_accounts WHERE identifier = @identifier', {
-			['@identifier'] = self.getIdentifier()
+		['@identifier'] = self.getIdentifier()
 		}, function(result)
 			local missingAccounts = {}
 
@@ -253,55 +267,63 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	end
 
 	self.setAccountMoney = function(acc, money)
-		if money >= 0 then
-			local account = self.getAccount(acc)
+		if money < 0 then
+			print(('es_extended: %s attempted exploiting! (reason: player tried setting -1 account balance)'):format(self.identifier))
+			return
+		end
 
-			if account then
-				local prevMoney = account.money
-				local newMoney = ESX.Math.Round(money)
+		local account   = self.getAccount(acc)
 
-				account.money = newMoney
+		if account then
+			local prevMoney = account.money
+			local newMoney  = ESX.Math.Round(money)
 
-				if acc == 'bank' then
-					self.set('bank', newMoney)
-				end
+			account.money = newMoney
 
-				TriggerClientEvent('esx:setAccountMoney', self.source, account)
+			if acc == 'bank' then
+				self.set('bank', newMoney)
 			end
+
+			TriggerClientEvent('esx:setAccountMoney', self.source, account)
 		end
 	end
 
 	self.addAccountMoney = function(acc, money)
-		if money > 0 then
-			local account = self.getAccount(acc)
+		if money < 0 then
+			print(('es_extended: %s attempted exploiting! (reason: player tried adding -1 account balance)'):format(self.identifier))
+			return
+		end
 
-			if account then
-				local newMoney = account.money + ESX.Math.Round(money)
-				account.money = newMoney
-	
-				if acc == 'bank' then
-					self.set('bank', newMoney)
-				end
-	
-				TriggerClientEvent('esx:setAccountMoney', self.source, account)
+		local account  = self.getAccount(acc)
+		if account then
+			local newMoney = account.money + ESX.Math.Round(money)
+			account.money = newMoney
+
+			if acc == 'bank' then
+				self.set('bank', newMoney)
 			end
+
+			TriggerClientEvent('esx:setAccountMoney', self.source, account)
 		end
 	end
 
 	self.removeAccountMoney = function(acc, money)
-		if money > 0 then
-			local account = self.getAccount(acc)
+		if money < 0 then
+			print(('es_extended: %s attempted exploiting! (reason: player tried removing -1 account balance)'):format(self.identifier))
+			return
+		end
 
-			if account then
-				local newMoney = account.money - ESX.Math.Round(money)
-				account.money = newMoney
-	
-				if acc == 'bank' then
-					self.set('bank', newMoney)
-				end
-	
-				TriggerClientEvent('esx:setAccountMoney', self.source, account)
+		local account  = self.getAccount(acc)
+
+		if account then
+			local newMoney = account.money - ESX.Math.Round(money)
+			account.money = newMoney
+
+			if acc == 'bank' then
+				self.set('bank', newMoney)
 			end
+
+			TriggerClientEvent('esx:setAccountMoney', self.source, account)
 		end
 	end
 
@@ -357,16 +379,16 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 				TriggerClientEvent('esx:addInventoryItem', self.source, item, item.count - oldCount)
 			end
 		end
-	end
+		
+		self.getWeight = function()
+			local inventoryWeight = 0
 
-	self.getWeight = function()
-		local inventoryWeight = 0
+			for k,v in ipairs(self.inventory) do
+				inventoryWeight = inventoryWeight + (v.count * v.weight)
+			end
 
-		for k,v in ipairs(self.inventory) do
-			inventoryWeight = inventoryWeight + (v.count * v.weight)
+			return inventoryWeight
 		end
-
-		return inventoryWeight
 	end
 
 	self.canCarryItem = function(name, count)
@@ -425,43 +447,44 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 			TriggerEvent('esx:setJob', self.source, self.job, lastJob)
 			TriggerClientEvent('esx:setJob', self.source, self.job)
 		else
-			print(('[es_extended] [^3WARNING^7] Ignoring invalid .setJob() usage for "%s"'):format(self.identifier))
+			print(('es_extended: ignoring setJob for %s due to job not found!'):format(self.source))
 		end
 	end
 
+    ---SECONDJOB INCLUDED
 	self.setJob2 = function(job2, grade2)
-        grade2 = tostring(grade2)
-        local lastJob2 = json.decode(json.encode(self.job2))
+		grade2 = tostring(grade2)
+		local lastJob2 = json.decode(json.encode(self.job2))
 
-        if ESX.DoesJob2Exist(job2, grade2) then
-            local job2Object, grade2Object = ESX.Jobs[job2], ESX.Jobs[job2].grades[grade2]
+		if ESX.DoesJob2Exist(job2, grade2) then
+			local job2Object, grade2Object = ESX.Jobs[job2], ESX.Jobs[job2].grades[grade2]
 
-            self.job2.id    = job2Object.id
-            self.job2.name  = job2Object.name
-            self.job2.label = job2Object.label
+			self.job2.id    = job2Object.id
+			self.job2.name  = job2Object.name
+			self.job2.label = job2Object.label
 
-            self.job2.grade        = tonumber(grade2)
-            self.job2.grade_name   = grade2Object.name
-            self.job2.grade_label  = grade2Object.label
-            self.job2.grade_salary = grade2Object.salary
+			self.job2.grade        = tonumber(grade2)
+			self.job2.grade_name   = grade2Object.name
+			self.job2.grade_label  = grade2Object.label
+			self.job2.grade_salary = grade2Object.salary
 
-            self.job2.skin_male    = {}
-            self.job2.skin_female  = {}
+			self.job2.skin_male    = {}
+			self.job2.skin_female  = {}
 
-            if grade2Object.skin_male ~= nil then
-                self.job2.skin_male = json.decode(grade2Object.skin_male)
-            end
+			if grade2Object.skin_male ~= nil then
+				self.job2.skin_male = json.decode(grade2Object.skin_male)
+			end
 
-            if grade2Object.skin_female ~= nil then
-                self.job2.skin_female = json.decode(grade2Object.skin_female)
-            end
+			if grade2Object.skin_female ~= nil then
+				self.job2.skin_female = json.decode(grade2Object.skin_female)
+			end
 
-            TriggerEvent('esx:setJob2', self.source, self.job2, lastJob2)
-            TriggerClientEvent('esx:setJob2', self.source, self.job2)
-        else
-            print(('es_extended: ignoring setJob2 for %s due to job2 not found!'):format(self.source))
-        end
-    end
+			TriggerEvent('esx:setJob2', self.source, self.job2, lastJob2)
+			TriggerClientEvent('esx:setJob2', self.source, self.job2)
+		else
+			print(('es_extended: ignoring setJob2 for %s due to job2 not found!'):format(self.source))
+		end
+	end
 
 	self.addWeapon = function(weaponName, ammo)
 		local weaponLabel = ESX.GetWeaponLabel(weaponName)
