@@ -43,14 +43,14 @@ MySQL.ready(function()
 		if ESX.Jobs[result2[i].job_name] then
 			ESX.Jobs[result2[i].job_name].grades[tostring(result2[i].grade)] = result2[i]
 		else
-			print(('es_extended: invalid job "%s" from table job_grades ignored!'):format(result2[i].job_name))
+			print(('[es_extended] [^3WARNING^7] Invalid job "%s" from table job_grades ignored'):format(result2[i].job_name))
 		end
 	end
 
 	for k,v in pairs(ESX.Jobs) do
 		if next(v.grades) == nil then
 			ESX.Jobs[v.name] = nil
-			print(('es_extended: ignoring job "%s" due to missing job grades!'):format(v.name))
+			print(('[es_extended] [^3WARNING^7] Ignoring job "%s" due to missing job grades'):format(v.name))
 		end
 	end
 end)
@@ -78,7 +78,9 @@ end)
 
 RegisterServerEvent('esx:clientLog')
 AddEventHandler('esx:clientLog', function(msg)
-	RconPrint(msg .. "\n")
+		if Config.EnableDebug then
+		print(('[es_extended] [^2TRACE^7] %s'):format(msg))
+	end
 end)
 
 RegisterServerEvent('esx:triggerServerCallback')
