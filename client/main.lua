@@ -435,9 +435,8 @@ for k,v in ipairs(Config.Weapons) do
 
 			if HasPedGotWeapon(playerPed, weaponHash, false) and weaponName ~= 'WEAPON_UNARMED' then
 				local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
-				local components = Config.Weapons[i].components
 
-						for k2,v2 in ipairs(v.components) do
+				for k2,v2 in ipairs(v.components) do
 					if HasPedGotWeaponComponent(playerPed, weaponHash, v2.hash) then
 						table.insert(weaponComponents, v2.name)
 					end
