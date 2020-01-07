@@ -380,15 +380,17 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 			end
 		end
 		
-		self.getWeight = function()
-			local inventoryWeight = 0
+		
+	end
+	
+	self.getWeight = function()
+		local inventoryWeight = 0
 
-			for k,v in ipairs(self.inventory) do
-				inventoryWeight = inventoryWeight + (v.count * v.weight)
-			end
-
-			return inventoryWeight
+		for k,v in ipairs(self.inventory) do
+			inventoryWeight = inventoryWeight + (v.count * v.weight)
 		end
+
+		return inventoryWeight
 	end
 
 	self.canCarryItem = function(name, count)
