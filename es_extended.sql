@@ -5,7 +5,7 @@ ALTER TABLE `users`
 	ADD COLUMN `skin` LONGTEXT NULL AFTER `name`,
 	ADD COLUMN `job` varchar(50) NULL DEFAULT 'unemployed' AFTER `skin`,
 	ADD COLUMN `job_grade` INT NULL DEFAULT 0 AFTER `job`,
-	ADD COLUMN `job2` varchar(255) NULL DEFAULT 'unemployed2'
+	ADD COLUMN `job2` varchar(255) NULL DEFAULT 'unemployed2',
  	ADD COLUMN `job2_grade` INT NULL DEFAULT 0 AFTER `job`,
 	ADD COLUMN `loadout` LONGTEXT NULL AFTER `job_grade`,
 	ADD COLUMN `position` VARCHAR(36) NULL AFTER `loadout`
