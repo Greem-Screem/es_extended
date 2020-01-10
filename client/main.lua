@@ -478,8 +478,8 @@ end)
 
 		 Citizen.Wait(0)
 
-		 if IsControlPressed(0, Keys1['F2'] ,keys2 ['A']) and IsInputDisabled(0) and not isDead and not ESX.UI.Menu.IsOpen('default', 'es_extended', 'inventory') then
-			-- ESX.ShowInventory()
+		 if IsControlPressed(0, 289) and IsInputDisabled(0) and not isDead and not ESX.UI.Menu.IsOpen('default', 'es_extended', 'inventory') then
+			ESX.ShowInventory()
 		 end
 
 	 end
