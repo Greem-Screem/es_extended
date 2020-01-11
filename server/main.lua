@@ -271,7 +271,6 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 		Async.parallel(tasks, function(results)
 			local xPlayer = CreateExtendedPlayer(player, userData.accounts, userData.inventory, userData.job, userData.job2, userData.loadout, userData.playerName, userData.lastPosition)
 
-			print(xPlayer.getJob2().name)
 			xPlayer.getMissingAccounts(function(missingAccounts)
 				if #missingAccounts > 0 then
 
