@@ -378,22 +378,28 @@ AddEventHandler('esx:giveInventoryItem', function(target, type, itemName, itemCo
 			sourceXPlayer.showNotification(_U('imp_invalid_amount'))
 		end
 	elseif type == 'item_weapon' then
-		if not targetXPlayer.hasWeapon(itemName) then
-			sourceXPlayer.removeWeapon(itemName)
-			targetXPlayer.addWeapon(itemName, itemCount)
+				if sourceXPlayer.hasWeapon(itemName) then
 			local weaponLabel = ESX.GetWeaponLabel(itemName)
 
-			if itemCount > 0 then
-				sourceXPlayer.showNotification(_U('gave_weapon_withammo', weaponLabel, itemCount, targetXPlayer.name))
-				targetXPlayer.showNotification(_U('received_weapon_withammo', weaponLabel, itemCount, sourceXPlayer.name))
+			if not targetXPlayer.hasWeapon(itemName) then
+				local _,weapon = xPlayer.getWeapon(itemName)
+				itemCount = weapon.ammo
+
+				sourceXPlayer.removeWeapon(itemName)
+				targetXPlayer.addWeapon(itemName, itemCount)
+
+				if itemCount > 0 then
+					sourceXPlayer.showNotification(_U('gave_weapon_withammo', weaponLabel, itemCount, targetXPlayer.name))
+					targetXPlayer.showNotification(_U('received_weapon_withammo', weaponLabel, itemCount, sourceXPlayer.name))
+				else
+						sourceXPlayer.showNotification(_U('gave_weapon', weaponLabel, targetXPlayer.name))
+					targetXPlayer.showNotification(_U('received_weapon', weaponLabel, sourceXPlayer.name))
+				end
 			else
-				sourceXPlayer.showNotification(_U('gave_weapon', weaponLabel, targetXPlayer.name))
-				targetXPlayer.showNotification(_U('received_weapon', weaponLabel, sourceXPlayer.name))
-			end
-		else
-			sourceXPlayer.showNotification(_U('gave_weapon_hasalready', targetXPlayer.name, weaponLabel))
-			targetXPlayer.showNotification(_U('received_weapon_hasalready', sourceXPlayer.name, weaponLabel))
-		end
+					sourceXPlayer.showNotification(_U('gave_weapon_hasalready', targetXPlayer.name, weaponLabel))
+				targetXPlayer.showNotification(_U('received_weapon_hasalready', sourceXPlayer.name, weaponLabel))
+				end
+end
 	elseif type == 'item_ammo' then
 		if sourceXPlayer.hasWeapon(itemName) then
 			if targetXPlayer.hasWeapon(itemName) then
@@ -468,6 +474,7 @@ AddEventHandler('esx:removeInventoryItem', function(type, itemName, itemCount)
 		if xPlayer.hasWeapon(itemName) then
 			local weaponNum, weapon = xPlayer.getWeapon(itemName)
 			xPlayer.removeWeapon(itemName)
+
 			local pickupLabel = ('~y~%s~s~ [~g~%s~s~ ammo]'):format(weapon.label, weapon.ammo)
 			ESX.CreatePickup('item_weapon', itemName, weapon.ammo, pickupLabel, playerId, weapon.components)
 
@@ -560,6 +567,22 @@ ESX.RegisterServerCallback('esx:getOtherPlayerData', function(source, cb, target
 		lastPosition = xPlayer.getLastPosition(),
 		money        = xPlayer.getMoney()
 	})
+end)
+
+ESX.RegisterServerCallback('esx:getPlayerNames', function(source, cb, players)
+	players[source] = nil
+
+	for playerId,v in pairs(players) do
+		local xPlayer = ESX.GetPlayerFromId(playerId)
+
+		if xPlayer then
+			players[playerId] = xPlayer.getName()
+		else
+			players[playerId] = nil
+		end
+	end
+
+	cb(players)
 end)
 
 TriggerEvent("es:addGroup", "jobmaster", "user", function(group) end)
