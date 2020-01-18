@@ -35,6 +35,7 @@ Locales['sv'] = {
   ['threw_account'] = 'du kastade ~r~$%s~s~ ~b~%s~s~',
   ['threw_weapon'] = 'du kastade ~y~1x~s~ ~b~%s~s~',
   ['threw_weapon_ammo'] = 'du kastade ~y~1x~s~ ~b~%s~s~ med ~o~%sx~s~ skott',
+  ['threw_weapon_already'] = 'you already carry the same weapon',
   -- Salary related
   ['received_salary'] = 'du har mottagit din lön på ~g~%s SEK~s~',
   ['received_help'] = 'du har mottagit bidrag på ~g~%s SEK~s~',

@@ -67,7 +67,7 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 							canRemove = item.canRemove
 						})
 					else
-						print(('es_extended: invalid item "%s" ignored!'):format(v.item))
+						print(('[es_extended] [^3WARNING^7] Ignoring invalid item "%s" for "%s"'):format(v.item, player.getIdentifier()))
 					end
 				end
 
@@ -148,7 +148,7 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 							userData.job.skin_female = json.decode(gradeObject.skin_female)
 						end
 					else
-						print(('es_extended: %s had an unknown job [job: %s, grade: %s], setting as unemployed!'):format(player.getIdentifier(), job, grade))
+					print(('[es_extended] [^3WARNING^7] Ignoring invalid job for %s [job: %s, grade: %s]'):format(player.getIdentifier(), job, grade))
 
 						local job, grade = 'unemployed', '0'
 						local jobObject, gradeObject = ESX.Jobs[job], ESX.Jobs[job].grades[grade]
@@ -273,7 +273,6 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 
 			xPlayer.getMissingAccounts(function(missingAccounts)
 				if #missingAccounts > 0 then
-
 					for i=1, #missingAccounts, 1 do
 						table.insert(xPlayer.accounts, {
 							name  = missingAccounts[i],
@@ -468,15 +467,13 @@ AddEventHandler('esx:removeInventoryItem', function(type, itemName, itemCount)
 	elseif type == 'item_weapon' then
 		if xPlayer.hasWeapon(itemName) then
 			local weaponNum, weapon = xPlayer.getWeapon(itemName)
-			local weaponPickup = 'PICKUP_' .. string.upper(itemName)
 			xPlayer.removeWeapon(itemName)
+			local pickupLabel = ('~y~%s~s~ [~g~%s~s~ ammo]'):format(weapon.label, weapon.ammo)
+			ESX.CreatePickup('item_weapon', itemName, weapon.ammo, pickupLabel, playerId, weapon.components)
 
 			if weapon.ammo > 0 then
-				TriggerClientEvent('esx:pickupWeapon', playerId, weaponPickup, itemName, weapon.ammo)
 				xPlayer.showNotification(_U('threw_weapon_ammo', weapon.label, weapon.ammo))
 			else
-				-- workaround for CreateAmbientPickup() giving 30 rounds of ammo when you drop the weapon with 0 ammo
-				TriggerClientEvent('esx:pickupWeapon', playerId, weaponPickup, itemName, 1)
 				xPlayer.showNotification(_U('threw_weapon', weapon.label))
 			end
 		end
@@ -497,24 +494,39 @@ end)
 
 RegisterServerEvent('esx:onPickup')
 AddEventHandler('esx:onPickup', function(id)
-	local playerId = source
-	local pickup  = ESX.Pickups[id]
-	local xPlayer = ESX.GetPlayerFromId(playerId)
+local pickup, xPlayer, success = ESX.Pickups[id], ESX.GetPlayerFromId(source)
 
-	if pickup.type == 'item_standard' then
-		if xPlayer.canCarryItem(pickup.name, pickup.count) then
-			xPlayer.addInventoryItem(pickup.name, pickup.count)
+if pickup then
+		if pickup.type == 'item_standard' then
+			if xPlayer.canCarryItem(pickup.name, pickup.count) then
+				xPlayer.addInventoryItem(pickup.name, pickup.count)
+				success = true
+			else
+				xPlayer.showNotification(_U('threw_cannot_pickup'))
+			end
+		elseif pickup.type == 'item_money' then
+			success = true
+			xPlayer.addMoney(pickup.count)
+		elseif pickup.type == 'item_account' then
+			success = true
+			xPlayer.addAccountMoney(pickup.name, pickup.count)
+		elseif pickup.type == 'item_weapon' then
+			if xPlayer.hasWeapon(pickup.name) then
+				xPlayer.showNotification(_U('threw_weapon_already'))
+			else
+				success = true
+				xPlayer.addWeapon(pickup.name, pickup.count)
+
+				for k,v in ipairs(pickup.components) do
+					xPlayer.addWeaponComponent(pickup.name, v)
+				end
+			end
+		end
+
+		if success then
 			ESX.Pickups[id] = nil
 			TriggerClientEvent('esx:removePickup', -1, id)
 		end
-	elseif pickup.type == 'item_money' then
-		ESX.Pickups[id] = nil
-		TriggerClientEvent('esx:removePickup', -1, id)
-		xPlayer.addMoney(pickup.count)
-	elseif pickup.type == 'item_account' then
-		ESX.Pickups[id] = nil
-		TriggerClientEvent('esx:removePickup', -1, id)
-		xPlayer.addAccountMoney(pickup.name, pickup.count)
 	end
 end)
 

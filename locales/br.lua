@@ -35,6 +35,7 @@ Locales['br'] = {
   ['threw_account'] = 'you threw ~r~$%s~s~ ~b~%s~s~',
   ['threw_weapon'] = 'you threw ~y~1x~s~ ~b~%s~s~',
   ['threw_weapon_ammo'] = 'you threw ~y~1x~s~ ~b~%s~s~ with ~o~%sx~s~ bullets',
+    ['threw_weapon_already'] = 'you already carry the same weapon',
   -- Salary related
   ['received_salary'] = 'voce recebeu seu salario: ~g~$%s~s~ ',
   ['received_help'] = 'voce recebeu seu cheque de bem-estar: ~g~$%s~s~ ',
