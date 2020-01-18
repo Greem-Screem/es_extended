@@ -489,9 +489,7 @@ for k,v in ipairs(Config.Weapons) do
 
 		if loadoutChanged and isLoadoutLoaded then
 			ESX.PlayerData.loadout = loadout
-			TriggerServerEvent('esx:updateLoadout', loadout)
 		end
-
 	end
 end)
 
