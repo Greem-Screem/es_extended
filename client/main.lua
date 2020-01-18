@@ -1,5 +1,4 @@
-local isLoadoutLoaded, isPaused, isPlayerSpawned, isDead = false, false, false, false
-local lastLoadout, pickups = {}, {}
+local isLoadoutLoaded, isPaused, isDead, isFirstSpawn, pickups = false, false, false, true, {}
 
 RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(xPlayer)
@@ -64,33 +63,27 @@ end)
 
 AddEventHandler('playerSpawned', function()
 	while not ESX.PlayerLoaded do
-		Citizen.Wait(1)
+		Citizen.Wait(10)
 	end
 
-	local playerPed = PlayerPedId()
+	TriggerEvent('esx:restoreLoadout')
 
 	-- Restore position
-	if ESX.PlayerData.lastPosition then
-		SetEntityCoords(playerPed, ESX.PlayerData.lastPosition.x, ESX.PlayerData.lastPosition.y, ESX.PlayerData.lastPosition.z)
+	if isFirstSpawn then
+		ESX.Game.Teleport(PlayerPedId(), ESX.PlayerData.coords)
+		isFirstSpawn = false
 	end
 
-	TriggerEvent('esx:restoreLoadout') -- restore loadout
-
-	isLoadoutLoaded, isPlayerSpawned, isDead = true, true, false
+	isLoadoutLoaded, isDead = true, false
 
 	if Config.EnablePvP then
-		SetCanAttackFriendly(playerPed, true, false)
+		SetCanAttackFriendly(PlayerPedId(), true, false)
 		NetworkSetFriendlyFireOption(true)
 	end
 end)
 
-AddEventHandler('esx:onPlayerDeath', function()
-	isDead = true
-end)
-
-AddEventHandler('skinchanger:loadDefaultModel', function()
-	isLoadoutLoaded = false
-end)
+AddEventHandler('esx:onPlayerDeath', function() isDead = true end)
+AddEventHandler('skinchanger:loadDefaultModel', function() isLoadoutLoaded = false end)
 
 AddEventHandler('skinchanger:modelLoaded', function()
 	while not ESX.PlayerLoaded do
@@ -111,7 +104,6 @@ AddEventHandler('esx:restoreLoadout', function()
 		local weaponHash = GetHashKey(weaponName)
 
 		GiveWeaponToPed(playerPed, weaponHash, 0, false, false)
-		local ammoType = GetPedAmmoTypeFromWeapon(playerPed, weaponHash)
 
 		for k2,v2 in ipairs(v.components) do
 			local componentHash = ESX.GetWeaponComponent(weaponName, v2).hash
@@ -244,21 +236,15 @@ AddEventHandler('esx:removeWeaponComponent', function(weaponName, weaponComponen
 	RemoveWeaponComponentFromPed(playerPed, weaponHash, componentHash)
 end)
 
--- Commands
-RegisterNetEvent('esx:teleport')
-AddEventHandler('esx:teleport', function(pos)
-	pos.x = pos.x + 0.0
-	pos.y = pos.y + 0.0
-	pos.z = pos.z + 0.0
+AddEventHandler('esx:teleport', function(coords)
+	local playerPed = PlayerPedId()
 
-	RequestCollisionAtCoord(pos.x, pos.y, pos.z)
+	-- ensure decmial number
+	coords.x = coords.x + 0.0
+	coords.y = coords.y + 0.0
+	coords.z = coords.z + 0.0
 
-	while not HasCollisionLoadedAroundEntity(PlayerPedId()) do
-		RequestCollisionAtCoord(pos.x, pos.y, pos.z)
-		Citizen.Wait(1)
-	end
-
-	SetEntityCoords(PlayerPedId(), pos.x, pos.y, pos.z)
+ESX.Game.Teleport(playerPed, coords)
 end)
 
 RegisterNetEvent('esx:setJob')
@@ -423,7 +409,7 @@ end)
 
 
 
--- Pause menu disable HUD display
+-- Pause menu disables HUD display
 if Config.EnableHud then
 	Citizen.CreateThread(function()
 		while true do
@@ -444,12 +430,11 @@ end
 
 -- Save loadout
 Citizen.CreateThread(function()
+local lastLoadout = {}
 	while true do
 		Citizen.Wait(5000)
 
-		local playerPed      = PlayerPedId()
-		local loadout        = {}
-		local loadoutChanged = false
+		local playerPed, loadout, loadoutChanged = PlayerPedId(), {}, false
 
 for k,v in ipairs(Config.Weapons) do
 			local weaponName = v.name
@@ -575,22 +560,26 @@ Citizen.CreateThread(function()
 	end
 end)
 
--- Last position
+-- Update current player coords
 Citizen.CreateThread(function()
-	while true do
+	local previousCoords = vector3(0, 0, 0)
+
+		-- wait for player to restore coords
+	while not isLoadoutLoaded do
 		Citizen.Wait(1000)
+	end
+
+		hile true do
+		Citizen.Wait(Config.CoordsSyncInterval)
 		local playerPed = PlayerPedId()
+		local playerCoords = GetEntityCoords(playerPed)
+		local distance = #(playerCoords - previousCoords)
 
-		if ESX.PlayerLoaded and isPlayerSpawned then
-			local coords = GetEntityCoords(playerPed)
-
-			if not IsEntityDead(playerPed) then
-				ESX.PlayerData.lastPosition = {x = coords.x, y = coords.y, z = coords.z}
-			end
-		end
-
-		if IsEntityDead(playerPed) and isPlayerSpawned then
-			isPlayerSpawned = false
+		if distance > 10 then
+			previousCoords = playerCoords
+			local playerHeading = ESX.Math.Round(GetEntityHeading(playerPed), 1)
+			local formattedCoords = {x = ESX.Math.Round(playerCoords.x, 1), y = ESX.Math.Round(playerCoords.y, 1), z = ESX.Math.Round(playerCoords.z, 1), heading = playerHeading}
+			TriggerServerEvent('esx:updateCoords', formattedCoords)
 		end
 	end
 end)

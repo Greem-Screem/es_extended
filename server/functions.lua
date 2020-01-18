@@ -38,7 +38,6 @@ end
 
 ESX.SavePlayer = function(xPlayer, cb)
 	local asyncTasks = {}
-	xPlayer.setLastPosition(xPlayer.getCoords())
 
 	-- User accounts
 	for k,v in ipairs(xPlayer.accounts) do
@@ -83,7 +82,7 @@ ESX.SavePlayer = function(xPlayer, cb)
 			['@job_grade']  = xPlayer.job.grade,
 			['@job2_grade']  = xPlayer.job2.grade,
 			['@loadout']    = json.encode(xPlayer.getLoadout()),
-			['@position']   = json.encode(xPlayer.getLastPosition()),
+			['@position']   = json.encode(xPlayer.getCoords()),
 			['@identifier'] = xPlayer.identifier
 		}, function(rowsChanged)
 			cb()
@@ -91,7 +90,7 @@ ESX.SavePlayer = function(xPlayer, cb)
 	end)
 
 	Async.parallel(asyncTasks, function(results)
-		RconPrint('[SAUVEGARDE] ' .. xPlayer.name .. "^7\n")
+		print(('[es_extended] [^2INFO^7] Saved player "%s^7"'):format(xPlayer.getName()))
 
 		if cb ~= nil then
 			cb()

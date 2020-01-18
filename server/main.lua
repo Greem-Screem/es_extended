@@ -1,6 +1,5 @@
-AddEventHandler('es:playerLoaded', function(source, _player)
-	local playerId = source
-	local tasks   = {}
+AddEventHandler('es:playerLoaded', function(playerId, player)
+	local tasks = {}
 
 	local userData = {
 		accounts     = {},
@@ -9,19 +8,18 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 		job2         = {},
 		loadout      = {},
 		playerName   = GetPlayerName(playerId),
-		lastPosition = nil
+		coords = nil
 	}
 
-	TriggerEvent('es:getPlayerFromId', playerId, function(player)
 		-- Update user name in DB
-		table.insert(tasks, function(cb)
-			MySQL.Async.execute('UPDATE users SET name = @name WHERE identifier = @identifier', {
-				['@identifier'] = player.getIdentifier(),
-				['@name'] = userData.playerName
-			}, function(rowsChanged)
-				cb()
-			end)
+	table.insert(tasks, function(cb)
+		MySQL.Async.execute('UPDATE users SET name = @name WHERE identifier = @identifier', {
+			['@identifier'] = player.getIdentifier(),
+			['@name'] = userData.playerName
+		}, function(rowsChanged)
+			cb()
 		end)
+	end)
 
 		-- Get accounts
 			table.insert(tasks, function(cb)
@@ -45,7 +43,6 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 
 		-- Get inventory
 		table.insert(tasks, function(cb)
-
 			MySQL.Async.fetchAll('SELECT item, count FROM user_inventory WHERE identifier = @identifier', {
 				['@identifier'] = player.getIdentifier()
 			}, function(inventory)
@@ -71,14 +68,14 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 					end
 				end
 
-				for itemName,item in pairs(ESX.Items) do
-					if not foundItems[itemName] then
+				for name,item in pairs(ESX.Items) do
+				if not foundItems[name] then
 						table.insert(userData.inventory, {
-							name = itemName,
+							name = name,
 							count = 0,
 							label = item.label,
 							weight = item.weight,
-							usable = ESX.UsableItemsCallbacks[itemName] ~= nil,
+							usable = ESX.UsableItemsCallbacks[name] ~= nil,
 							rare = item.rare,
 							canRemove = item.canRemove
 						})
@@ -95,7 +92,7 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 							end)
 						end
 
-						scope(itemName, player.getIdentifier())
+						scope(name, player.getIdentifier())
 					end
 				end
 
@@ -115,7 +112,7 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 
 			local tasks2 = {}
 
-			-- Get job name, grade and last position
+			-- Get job name, grade and coords
 			table.insert(tasks2, function(cb2)
 
 					MySQL.Async.fetchAll('SELECT job, job_grade, loadout, position FROM users WHERE identifier = @identifier', {
@@ -140,11 +137,11 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 						userData.job.skin_male    = {}
 						userData.job.skin_female  = {}
 
-						if gradeObject.skin_male ~= nil then
+						if gradeObject.skin_male then
 							userData.job.skin_male = json.decode(gradeObject.skin_male)
 						end
 			
-						if gradeObject.skin_female ~= nil then
+						if gradeObject.skin_female then
 							userData.job.skin_female = json.decode(gradeObject.skin_female)
 						end
 					else
@@ -168,7 +165,7 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 						userData.job.skin_female  = {}
 					end
 
-					if result[1].loadout ~= nil then
+					if result[1].loadout then
 						userData.loadout = json.decode(result[1].loadout)
 
 						-- Compatibility with old loadouts prior to components update
@@ -269,13 +266,13 @@ AddEventHandler('es:playerLoaded', function(source, _player)
         ---SECONDJOB INCLUDED
 		-- Run Tasks
 		Async.parallel(tasks, function(results)
-			local xPlayer = CreateExtendedPlayer(player, userData.accounts, userData.inventory, userData.job, userData.job2, userData.loadout, userData.playerName, userData.lastPosition)
+			local xPlayer = CreateExtendedPlayer(player, userData.accounts, userData.inventory, userData.job, userData.job2, userData.loadout, userData.playerName, userData.coords)
 
 			xPlayer.getMissingAccounts(function(missingAccounts)
 				if #missingAccounts > 0 then
 					for i=1, #missingAccounts, 1 do
 						table.insert(xPlayer.accounts, {
-							name  = missingAccounts[i],
+							name = missingAccounts[i],
 							money = 0,
 							label = Config.AccountLabels[missingAccounts[i]]
 						})
@@ -291,22 +288,20 @@ AddEventHandler('es:playerLoaded', function(source, _player)
 				TriggerClientEvent('esx:playerLoaded', playerId, {
 					identifier   = xPlayer.identifier,
 					accounts     = xPlayer.getAccounts(),
+					coords = xPlayer.getCoords(),
 					inventory    = xPlayer.getInventory(),
 					job          = xPlayer.getJob(),
 					job2          = xPlayer.getJob2(),
 					loadout      = xPlayer.getLoadout(),
-					lastPosition = xPlayer.getLastPosition(),
 					money        = xPlayer.getMoney(),
 					maxWeight    = xPlayer.maxWeight
 				})
 
 				xPlayer.displayMoney(xPlayer.getMoney())
-				TriggerClientEvent('esx:createMissingPickups', playerId, ESX.Pickups)
+				xPlayer.triggerEvent('esx:createMissingPickups', ESX.Pickups)
 			end)
 		end)
-
 	end)
-end)
 
 AddEventHandler('playerDropped', function(reason)
 	local playerId = source
@@ -322,15 +317,16 @@ AddEventHandler('playerDropped', function(reason)
 	end
 end)
 	
+	RegisterNetEvent('esx:updateCoords')
+AddEventHandler('esx:updateCoords', function(coords)
 local xPlayer = ESX.GetPlayerFromId(source)
 
-RegisterServerEvent('esx:updateLastPosition')
-AddEventHandler('esx:updateLastPosition', function(position)
-	local xPlayer = ESX.GetPlayerFromId(source)
-	xPlayer.setLastPosition(position)
+	if xPlayer then
+		xPlayer.updateCoords(coords)
+	end
 end)
 
-RegisterServerEvent('esx:giveInventoryItem')
+RegisterNetEvent('esx:giveInventoryItem')
 AddEventHandler('esx:giveInventoryItem', function(target, type, itemName, itemCount)
 	local playerId = source
 	local sourceXPlayer = ESX.GetPlayerFromId(playerId)
@@ -416,7 +412,7 @@ end
 	end
 end)
 
-RegisterServerEvent('esx:removeInventoryItem')
+RegisterNetEvent('esx:removeInventoryItem')
 AddEventHandler('esx:removeInventoryItem', function(type, itemName, itemCount)
 	local playerId = source
 	local xPlayer = ESX.GetPlayerFromId(source)
@@ -483,7 +479,7 @@ AddEventHandler('esx:removeInventoryItem', function(type, itemName, itemCount)
 	end
 end)
 
-RegisterServerEvent('esx:useItem')
+RegisterNetEvent('esx:useItem')
 AddEventHandler('esx:useItem', function(itemName)
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local count = xPlayer.getInventoryItem(itemName).count
@@ -495,7 +491,7 @@ AddEventHandler('esx:useItem', function(itemName)
 	end
 end)
 
-RegisterServerEvent('esx:onPickup')
+RegisterNetEvent('esx:onPickup')
 AddEventHandler('esx:onPickup', function(id)
 local pickup, xPlayer, success = ESX.Pickups[id], ESX.GetPlayerFromId(source)
 
@@ -544,7 +540,6 @@ ESX.RegisterServerCallback('esx:getPlayerData', function(source, cb)
 		job          = xPlayer.getJob(),
 		job2          = xPlayer.getJob2(),
 		loadout      = xPlayer.getLoadout(),
-		lastPosition = xPlayer.getLastPosition(),
 		money        = xPlayer.getMoney()
 	})
 end)
@@ -560,7 +555,6 @@ ESX.RegisterServerCallback('esx:getOtherPlayerData', function(source, cb, target
 		job          = xPlayer.getJob(),
 		job2          = xPlayer.getJob2(),
 		loadout      = xPlayer.getLoadout(),
-		lastPosition = xPlayer.getLastPosition(),
 		money        = xPlayer.getMoney()
 	})
 end)
@@ -580,7 +574,6 @@ ESX.RegisterServerCallback('esx:getPlayerNames', function(source, cb, players)
 
 	cb(players)
 end)
-
 
 ESX.StartDBSync()
 ESX.StartPayCheck()
