@@ -53,10 +53,11 @@ ESX.ShowNotification = function(msg, flash, saveToBrief, hudColorIndex)
 end
 
     ESX.ShowAdvancedNotification = function(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)	AddTextEntry('esxAdvancedNotification', msg)
+	if saveToBrief == nil then saveToBrief = true end
 	BeginTextCommandThefeedPost('esxAdvancedNotification')
 	if hudColorIndex then ThefeedNextPostBackgroundColor(hudColorIndex) end
 	EndTextCommandThefeedPostMessagetext(textureDict, textureDict, false, iconType, sender, subject)
-	EndTextCommandThefeedPostTicker(flash, saveToBrief)
+	EndTextCommandThefeedPostTicker(flash or false, saveToBrief)
 end
 
 ESX.ShowHelpNotification = function(msg, thisFrame, beep, duration)
