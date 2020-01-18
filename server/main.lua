@@ -585,7 +585,6 @@ ESX.RegisterServerCallback('esx:getPlayerNames', function(source, cb, players)
 	cb(players)
 end)
 
-TriggerEvent("es:addGroup", "jobmaster", "user", function(group) end)
 
 ESX.StartDBSync()
 ESX.StartPayCheck()
