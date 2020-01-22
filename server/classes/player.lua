@@ -87,26 +87,6 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		end
 	end
 
-	self.addBank = function(money)
-		money = ESX.Math.Round(money)
-
-		if money >= 0 then
-			self.player.addBank(money)
-		else
-			print(('es_extended: %s attempted exploiting! (reason: player tried adding -1 bank balance)'):format(self.identifier))
-		end
-	end
-
-	self.removeBank = function(money)
-		money = ESX.Math.Round(money)
-
-		if money >= 0 then
-			self.player.removeBank(money)
-		else
-			print(('es_extended: %s attempted exploiting! (reason: player tried removing -1 bank balance)'):format(self.identifier))
-		end
-	end
-
 	self.displayMoney = function(money)
 		self.player.displayMoney(money)
 	end
