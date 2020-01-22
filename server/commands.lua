@@ -115,7 +115,9 @@ if xPlayer then
 		local amount = tonumber(args[3])
 
 	if amount then
-		if xPlayer.getAccount(account) then
+		if account == 'cash' then
+				xPlayer.addMoney(amount)
+			else if xPlayer.getAccount(account) then
 			xPlayer.addAccountMoney(account, amount)
 		else
 				TriggerClientEvent('esx:showNotification', source, _U('invalid_account'))
