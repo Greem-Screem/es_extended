@@ -117,7 +117,7 @@ if xPlayer then
 	if amount then
 		if account == 'cash' then
 				xPlayer.addMoney(amount)
-			else if xPlayer.getAccount(account) then
+			elseif xPlayer.getAccount(account) then
 			xPlayer.addAccountMoney(account, amount)
 		else
 				TriggerClientEvent('esx:showNotification', source, _U('invalid_account'))
