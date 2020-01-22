@@ -31,16 +31,6 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	self.getMoney = function()
 		return self.player.get('money')
 	end
-
-	self.setBankBalance = function(money)
-		money = ESX.Math.Round(money)
-
-		if money >= 0 then
-			self.player.setBankBalance(money)
-		else
-			print(('es_extended: %s attempted exploiting! (reason: player tried setting -1 bank balance)'):format(self.identifier))
-		end
-	end
 	
 	self.getBank = function()
 		return self.player.get('bank')
@@ -95,21 +85,6 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		self.player.displayBank(money)
 	end
 
-	self.setSessionVar = function(key, value)
-		self.player.setSessionVar(key, value)
-	end
-
-	self.getSessionVar = function(k)
-		return self.player.getSessionVar(k)
-	end
-
-	self.getPermissions = function()
-		return self.player.getPermissions()
-	end
-
-	self.setPermissions = function(p)
-		self.player.setPermissions(p)
-	end
 
 	self.getIdentifier = function()
 		return self.player.getIdentifier()
