@@ -279,12 +279,19 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		local item = self.getInventoryItem(name)
 
 		if item then
-			count = ESX.Math.Round(count)
 			local newCount = item.count + count
-			item.count = newCount
+			item.count     = newCount
 
-			TriggerEvent('esx:onAddInventoryItem', self.source, item.name, item.count)
-			self.triggerEvent('esx:addInventoryItem', item.name, item.count)
+			local currentWeight, itemWeight = self.getWeight(), item.weight
+			local newWeight = currentWeight + (itemWeight * count)
+
+			if newWeight > self.maxWeight then
+				TriggerClientEvent('esx:showNotification', self.source, "Vous n'avez ~r~pas assez de place~w~ dans votre inventaire.")
+				return
+			end
+
+			TriggerEvent('esx:onAddInventoryItem', self.source, item, count)
+			TriggerClientEvent('esx:addInventoryItem', self.source, item, count)
 		end
 	end
 
