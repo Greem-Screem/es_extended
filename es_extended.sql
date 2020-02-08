@@ -40,7 +40,7 @@ CREATE TABLE `jobs` (
 	PRIMARY KEY (`name`)
 );
 
-INSERT INTO `jobs` VALUES ('unemployed','Unemployed');
+INSERT INTO `jobs` VALUES ('unemployed', 'Unemployed', 'unemployed2', 'unemployed');
 
 CREATE TABLE `user_accounts` (
 	`id` int(11) NOT NULL AUTO_INCREMENT,
