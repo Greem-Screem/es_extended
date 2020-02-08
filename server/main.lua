@@ -166,14 +166,11 @@ AddEventHandler('es:playerLoaded', function(playerId, player)
 						end
 					end
 
-					if result[1].position ~= nil then
-						userData.lastPosition = json.decode(result[1].position)
-					end
-
-					cb2()
-				end)
-
+				userData.coords = json.decode(result[1].position)
+				cb2()
 			end)
+
+		end)
 
             --- SECONDJOB INCLUDED
 			-- Get job2 name, grade2 and last position
@@ -275,16 +272,16 @@ AddEventHandler('es:playerLoaded', function(playerId, player)
 
 				TriggerEvent('esx:playerLoaded', playerId, xPlayer)
 
-				TriggerClientEvent('esx:playerLoaded', playerId, {
-					identifier   = xPlayer.identifier,
-					accounts     = xPlayer.getAccounts(),
-					coords = xPlayer.getCoords(),
-					inventory    = xPlayer.getInventory(),
-					job          = xPlayer.getJob(),
-					job2          = xPlayer.getJob2(),
-					loadout      = xPlayer.getLoadout(),
-					money        = xPlayer.getMoney(),
-					maxWeight    = xPlayer.maxWeight
+			xPlayer.triggerEvent('esx:playerLoaded', {
+				identifier = xPlayer.identifier,
+				accounts = xPlayer.getAccounts(),
+				coords = xPlayer.getCoords(),
+				inventory = xPlayer.getInventory(),
+				job = xPlayer.getJob(),
+				job2 = xPlayer.getJob2(),
+				loadout = xPlayer.getLoadout(),
+				money = xPlayer.getMoney(),
+				maxWeight = xPlayer.maxWeight
 				})
 
 				xPlayer.displayMoney(xPlayer.getMoney())
@@ -360,7 +357,6 @@ AddEventHandler('esx:giveInventoryItem', function(target, type, itemName, itemCo
 			sourceXPlayer.showNotification(_U('imp_invalid_amount'))
 		end
 	elseif type == 'item_weapon' then
-		itemName = string.upper(itemName)
 				if sourceXPlayer.hasWeapon(itemName) then
 			local weaponLabel = ESX.GetWeaponLabel(itemName)
 
@@ -454,6 +450,8 @@ AddEventHandler('esx:removeInventoryItem', function(type, itemName, itemCount)
 			end
 		end
 	elseif type == 'item_weapon' then
+	itemName = string.upper(itemName)
+	
 		if xPlayer.hasWeapon(itemName) then
 			local weaponNum, weapon = xPlayer.getWeapon(itemName)
 			xPlayer.removeWeapon(itemName)

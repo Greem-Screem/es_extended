@@ -52,8 +52,9 @@ ESX.ShowNotification = function(msg, flash, saveToBrief, hudColorIndex)
 	EndTextCommandThefeedPostTicker(flash or false, saveToBrief)
 end
 
-    ESX.ShowAdvancedNotification = function(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)	AddTextEntry('esxAdvancedNotification', msg)
+    ESX.ShowAdvancedNotification = function(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)
 	if saveToBrief == nil then saveToBrief = true end
+	AddTextEntry('esxAdvancedNotification', msg)
 	BeginTextCommandThefeedPost('esxAdvancedNotification')
 	if hudColorIndex then ThefeedNextPostBackgroundColor(hudColorIndex) end
 	EndTextCommandThefeedPostMessagetext(textureDict, textureDict, false, iconType, sender, subject)
@@ -66,6 +67,7 @@ ESX.ShowHelpNotification = function(msg, thisFrame, beep, duration)
 	if thisFrame then
 		DisplayHelpTextThisFrame('esxHelpNotification', false)
 	else
+	if beep == nil then beep = true end
 		BeginTextCommandDisplayHelp('esxHelpNotification')
 		EndTextCommandDisplayHelp(0, false, beep, duration or -1)
 	end
@@ -202,6 +204,10 @@ ESX.UI.Menu.Open = function(type, namespace, name, data, submit, cancel, change,
 
 	menu.setElement = function(i, key, val)
 		menu.data.elements[i][key] = val
+	end
+
+menu.setElements = function(newElements)
+		menu.data.elements = newElements
 	end
 
 	menu.setTitle = function(val)
@@ -520,8 +526,7 @@ ESX.Game.GetPlayersInArea = function(coords, area)
 	for i=1, #players, 1 do
 		local target = GetPlayerPed(players[i])
 		local targetCoords = GetEntityCoords(target)
-		local distance     = GetDistanceBetweenCoords(targetCoords, coords.x, coords.y, coords.z, true)
-
+	
 		if #(coords - targetCoords) <= area then
 			table.insert(playersInArea, players[i])
 		end
@@ -1121,11 +1126,11 @@ AddEventHandler('esx:showNotification', function(msg, flash, saveToBrief, hudCol
 end)
 
 RegisterNetEvent('esx:showAdvancedNotification')
-
 AddEventHandler('esx:showAdvancedNotification', function(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)
 	ESX.ShowAdvancedNotification(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)
 end)
 
+RegisterNetEvent('esx:showHelpNotification')
 AddEventHandler('esx:showHelpNotification', function(msg, thisFrame, beep, duration)
 	ESX.ShowHelpNotification(msg, thisFrame, beep, duration)
 end)

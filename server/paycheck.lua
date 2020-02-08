@@ -1,5 +1,4 @@
 ESX.StartPayCheck = function()
-
 	function payCheck()
 		local xPlayers = ESX.GetPlayers()
 

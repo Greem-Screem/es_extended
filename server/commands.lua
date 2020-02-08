@@ -138,6 +138,7 @@ end, {help = _U('giveaccountmoney'), params = {
 
 TriggerEvent('es:addGroupCommand', 'giveitem', 'admin', function(source, args, user)
 	local xPlayer = ESX.GetPlayerFromId(args[1])
+
 	if xPlayer then
 		local item = args[2]
 		local count = tonumber(args[3])
@@ -161,6 +162,7 @@ end, {help = _U('giveitem'), params = {
 	{name = 'item', help = _U('item')},
 	{name = 'amount', help = _U('amount')}
 }})
+
 TriggerEvent('es:addGroupCommand', 'giveweapon', 'admin', function(source, args, user)
 	local xPlayer = ESX.GetPlayerFromId(args[1])
 
@@ -169,6 +171,7 @@ TriggerEvent('es:addGroupCommand', 'giveweapon', 'admin', function(source, args,
 
 		if ESX.GetWeapon(weaponName) then
 			weaponName = string.upper(weaponName)
+			
 			if xPlayer.hasWeapon(weaponName) then
 				TriggerClientEvent('chat:addMessage', source, { args = { '^1SYSTEM', 'Player already has that weapon.' } })
 			else

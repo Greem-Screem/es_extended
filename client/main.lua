@@ -68,7 +68,6 @@ AddEventHandler('playerSpawned', function()
 
 	TriggerEvent('esx:restoreLoadout')
 
-	-- Restore position
 	if isFirstSpawn then
 		ESX.Game.Teleport(PlayerPedId(), ESX.PlayerData.coords)
 		isFirstSpawn = false
@@ -104,6 +103,7 @@ AddEventHandler('esx:restoreLoadout', function()
 		local weaponHash = GetHashKey(weaponName)
 
 		GiveWeaponToPed(playerPed, weaponHash, 0, false, false)
+		local ammoType = GetPedAmmoTypeFromWeapon(playerPed, weaponHash)
 
 		for k2,v2 in ipairs(v.components) do
 			local componentHash = ESX.GetWeaponComponent(weaponName, v2).hash
@@ -151,8 +151,8 @@ for k,v in ipairs(ESX.PlayerData.inventory) do
 		end
 	end
 
-	if showNotification then
-		ESX.UI.ShowInventoryItemNotification(true, item, count)
+if showNotification then
+	ESX.UI.ShowInventoryItemNotification(true, item, count)
 	end
 
 	if ESX.UI.Menu.IsOpen('default', 'es_extended', 'inventory') then
@@ -170,8 +170,8 @@ AddEventHandler('esx:removeInventoryItem', function(item, count, showNotificatio
 		end
 	end
 
-	if showNotification then
-		ESX.UI.ShowInventoryItemNotification(false, item, count)
+if showNotification then
+	ESX.UI.ShowInventoryItemNotification(false, item, count)
 	end
 
 	if ESX.UI.Menu.IsOpen('default', 'es_extended', 'inventory') then
@@ -232,7 +232,6 @@ AddEventHandler('esx:removeWeapon', function(weaponName, ammo)
 	end
 end)
 
-
 RegisterNetEvent('esx:removeWeaponComponent')
 AddEventHandler('esx:removeWeaponComponent', function(weaponName, weaponComponent)
 	local playerPed  = PlayerPedId()
@@ -242,15 +241,16 @@ AddEventHandler('esx:removeWeaponComponent', function(weaponName, weaponComponen
 	RemoveWeaponComponentFromPed(playerPed, weaponHash, componentHash)
 end)
 
+RegisterNetEvent('esx:teleport')
 AddEventHandler('esx:teleport', function(coords)
 	local playerPed = PlayerPedId()
 
-	-- ensure decmial number
+		-- ensure decmial number
 	coords.x = coords.x + 0.0
 	coords.y = coords.y + 0.0
 	coords.z = coords.z + 0.0
 
-ESX.Game.Teleport(playerPed, coords)
+	ESX.Game.Teleport(playerPed, coords)
 end)
 
 RegisterNetEvent('esx:setJob')
@@ -415,7 +415,7 @@ end)
 
 
 
--- Pause menu disables HUD display
+-- Pause menu disable HUD display
 if Config.EnableHud then
 	Citizen.CreateThread(function()
 		while true do
@@ -437,17 +437,17 @@ end
 -- Save loadout
 Citizen.CreateThread(function()
 local lastLoadout = {}
+
 	while true do
 		Citizen.Wait(5000)
-
-		local playerPed, loadout, loadoutChanged = PlayerPedId(), {}, false
-
+		local playerPed, loadout, loadoutChanged = PlayerPedId(), {}, false	
+	
 for k,v in ipairs(Config.Weapons) do
 			local weaponName = v.name
 			local weaponHash = GetHashKey(weaponName)
 			local weaponComponents = {}
 
-						if HasPedGotWeapon(playerPed, weaponHash, false) then
+			if HasPedGotWeapon(playerPed, weaponHash, false) then
 				local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
 
 				for k2,v2 in ipairs(v.components) do
@@ -475,7 +475,6 @@ for k,v in ipairs(Config.Weapons) do
 
 				lastLoadout[weaponName] = nil
 			end
-
 		end
 
 		if loadoutChanged and isLoadoutLoaded then
@@ -484,40 +483,20 @@ for k,v in ipairs(Config.Weapons) do
 	end
 end)
 
-RegisterCommand('showinventory', function()
-	if not isDead and not ESX.UI.Menu.IsOpen('default', 'es_extended', 'inventory') then
-		ESX.ShowInventory()
+	RegisterCommand('showinventory', function()
+		if not isDead and not ESX.UI.Menu.IsOpen('default', 'es_extended', 'inventory') then 
+			ESX.ShowInventory()
+	end
+end, false)
 
-	 end
- end, false)
+	RegisterKeyMapping('showinventory', _U('keymap_showinventory'), 'keyboard', 'F2')
 
- RegisterKeyMapping('showinventory', _U('keymap_showinventory'), 'keyboard', 'F2')
-
--- Dot above head
-if Config.ShowDotAbovePlayer then
-
-	Citizen.CreateThread(function()
-		while true do
-
-			Citizen.Wait(1)
-
-			local players = ESX.Game.GetPlayers()
-			for i = 1, #players, 1 do
-				if players[i] ~= PlayerId() then
-					local ped    = GetPlayerPed(players[i])
-					local headId = CreateMpGamerTag(ped, ('·'), false, false, '', false)
-				end
-			end
-
-		end
-	end)
-
-end
 -- Disable wanted level
 if Config.DisableWantedLevel then
 	Citizen.CreateThread(function()
 		while true do
 			Citizen.Wait(0)
+			local playerId = PlayerId()
 
 			local playerId = PlayerId()
 			if GetPlayerWantedLevel(playerId) ~= 0 then
@@ -532,32 +511,47 @@ end
 Citizen.CreateThread(function()
 	while true do
 		Citizen.Wait(0)
-
 		local playerPed = PlayerPedId()
-		local coords = GetEntityCoords(playerPed)
-		
-		-- if there's no nearby pickups we can wait a bit to save performance
-		if next(pickups) == nil then
-			Citizen.Wait(500)
-		end
+		local playerCoords, letSleep = GetEntityCoords(playerPed), true
+		local closestPlayer, closestDistance = ESX.Game.GetClosestPlayer()
 
 		for k,v in pairs(pickups) do
-			local distance = GetDistanceBetweenCoords(coords, v.coords.x, v.coords.y, v.coords.z, true)
-			local closestPlayer, closestDistance = ESX.Game.GetClosestPlayer()
+			local distance = #(playerCoords - v.coords)
 
-			if distance <= 5.0 then
+			if distance < 5 then
+				local label = v.label
+				letSleep = false
+
+				if distance < 1 then
+					if IsControlJustReleased(0, 38) then
+						if IsPedOnFoot(playerPed) and (closestDistance == -1 or closestDistance > 3) and not v.inRange then
+							v.inRange = true
+
+							local dict, anim = 'weapons@first_person@aim_rng@generic@projectile@sticky_bomb@', 'plant_floor'
+							ESX.Streaming.RequestAnimDict(dict)
+							TaskPlayAnim(playerPed, dict, anim, 8.0, 1.0, 1000, 16, 0.0, false, false, false)
+							Citizen.Wait(1000)
+
+							TriggerServerEvent('esx:onPickup', v.id)
+							PlaySoundFrontend(-1, 'PICK_UP', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+						end
+					end
+
+					label = ('%s~n~%s'):format(label, _U('threw_pickup_prompt'))
+				end
+
 				ESX.Game.Utils.DrawText3D({
 					x = v.coords.x,
 					y = v.coords.y,
 					z = v.coords.z + 0.25
-				}, v.label)
+				}, label, 1.2, 1)
+			elseif v.inRange then
+				v.inRange = false
 			end
+		end
 
-			if (closestDistance == -1 or closestDistance > 3) and distance <= 1.0 and not v.inRange and IsPedOnFoot(playerPed) then
-				TriggerServerEvent('esx:onPickup', v.id)
-				PlaySoundFrontend(-1, 'PICK_UP', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
-				v.inRange = true
-			end
+		if letSleep then
+			Citizen.Wait(500)
 		end
 	end
 end)
@@ -566,12 +560,12 @@ end)
 Citizen.CreateThread(function()
 	local previousCoords = vector3(0, 0, 0)
 
-		-- wait for player to restore coords
+	-- wait for player to restore coords
 	while not isLoadoutLoaded do
 		Citizen.Wait(1000)
 	end
 
-		hile true do
+	while true do
 		Citizen.Wait(Config.CoordsSyncInterval)
 		local playerPed = PlayerPedId()
 		local playerCoords = GetEntityCoords(playerPed)

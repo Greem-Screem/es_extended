@@ -32,7 +32,7 @@ ESX.TriggerServerCallback = function(name, requestId, source, cb, ...)
 	if ESX.ServerCallbacks[name] ~= nil then
 	   ESX.ServerCallbacks[name](source, cb, ...)
 	else
-		print('es_extended: TriggerServerCallback => [' .. name .. '] does not exist')
+		print(('[es_extended] [^3WARNING^7] Server callback "%s" does not exist. Make sure that the server sided file really is loading, an error in that file might cause it to not load.'):format(name))
 	end
 end
 
@@ -106,13 +106,11 @@ ESX.SavePlayers = function(cb)
 		table.insert(asyncTasks, function(cb)
 			local xPlayer = ESX.GetPlayerFromId(xPlayers[i])
 			ESX.SavePlayer(xPlayer, cb)
-			TriggerClientEvent('esx:showColoredNotification', xPlayer.source, "~o~Synchronisation ~w~de votre ~o~personnage.", 17)
 		end)
 	end
 
 	Async.parallelLimit(asyncTasks, 8, function(results)
-		RconPrint('[SAVED] SAUVEGARDE TOUT LES JOUEURS' .. "\n")
-
+		print(('[es_extended] [^2INFO^7] Saved %s player(s)'):format(#xPlayers))
 		if cb ~= nil then
 			cb()
 		end
@@ -137,7 +135,6 @@ ESX.GetPlayers = function()
 
 	return sources
 end
-
 
 ESX.GetPlayerFromId = function(source)
 	return ESX.Players[tonumber(source)]

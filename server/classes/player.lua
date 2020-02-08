@@ -8,8 +8,8 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	self.job2         = job2
 	self.loadout      = loadout
 	self.name         = name
-	self.coords       = coords
 	self.maxWeight    = Config.MaxWeight
+	self.coords       = coords
 
 	self.source     = self.player.get('source')
 	self.identifier = self.player.get('identifier')
@@ -23,8 +23,6 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 
 		if money >= 0 then
 			self.player.setMoney(money)
-		else
-			print(('es_extended: %s attempted exploiting! (reason: player tried setting -1 cash balance)'):format(self.identifier))
 		end
 	end
 
@@ -32,10 +30,6 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		return self.player.get('money')
 	end
 	
-	self.getBank = function()
-		return self.player.get('bank')
-	end
-
 	self.setCoords = function(coords)
 		self.updateCoords(coords)
 		self.triggerEvent('esx:teleport', coords)
@@ -62,18 +56,14 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 
 		if money >= 0 then
 			self.player.addMoney(money)
-		else
-			print(('es_extended: %s attempted exploiting! (reason: player tried adding -1 cash balance)'):format(self.identifier))
 		end
 	end
 
 	self.removeMoney = function(money)
 		money = ESX.Math.Round(money)
 
-		if money >= 0 then
+		if money > 0 then
 			self.player.removeMoney(money)
-		else
-			print(('es_extended: %s attempted exploiting! (reason: player tried removing -1 cash balance)'):format(self.identifier))
 		end
 	end
 
@@ -115,6 +105,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 				for k2,v2 in ipairs(self.accounts) do
 										if v2.name == account then
 						table.insert(accounts, v2)
+						break
 					end
 				end
 			end
@@ -204,64 +195,56 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		end
 	end
 
-	self.setAccountMoney = function(accountName, money)
-		if money < 0 then
-			print(('es_extended: %s attempted exploiting! (reason: player tried setting -1 account balance)'):format(self.identifier))
-			return
-		end
+self.setAccountMoney = function(accountName, money)
+		if money >= 0 then
+			local account = self.getAccount(accountName)
 
-		local account   = self.getAccount(accountName)
+			if account then
+				local prevMoney = account.money
+				local newMoney = ESX.Math.Round(money)
 
-		if account then
-			local prevMoney = account.money
-			local newMoney  = ESX.Math.Round(money)
+				account.money = newMoney
 
-			account.money = newMoney
+				if accountName == 'bank' then
+					self.set('bank', newMoney)
+				end
 
-			if accountName == 'bank' then
-				self.set('bank', newMoney)
+				self.triggerEvent('esx:setAccountMoney', account)
 			end
-
-			self.triggerEvent('esx:setAccountMoney', account)
 		end
 	end
 
 	self.addAccountMoney = function(accountName, money)
-		if money < 0 then
-			print(('es_extended: %s attempted exploiting! (reason: player tried adding -1 account balance)'):format(self.identifier))
-			return
-		end
+		if money > 0 then
+			local account = self.getAccount(accountName)
 
-		local account  = self.getAccount(accountName)
-		if account then
-			local newMoney = account.money + ESX.Math.Round(money)
-			account.money = newMoney
-
-			if accountName == 'bank' then
-				self.set('bank', newMoney)
+			if account then
+				local newMoney = account.money + ESX.Math.Round(money)
+				account.money = newMoney
+	
+				if accountName == 'bank' then
+					self.set('bank', newMoney)
+				end
+	
+				self.triggerEvent('esx:setAccountMoney', account)
 			end
-
-			self.triggerEvent('esx:setAccountMoney', account)
 		end
 	end
 
 	self.removeAccountMoney = function(accountName, money)
-		if money < 0 then
-			print(('es_extended: %s attempted exploiting! (reason: player tried removing -1 account balance)'):format(self.identifier))
-			return
-		end
+		if money > 0 then
+			local account = self.getAccount(accountName)
 
-		local account  = self.getAccount(accountName)
-
-		if account then
-			local newMoney = account.money - ESX.Math.Round(money)
-			account.money = newMoney
-
-			if accountName == 'bank' then
-				self.set('bank', newMoney)
+			if account then
+				local newMoney = account.money - ESX.Math.Round(money)
+				account.money = newMoney
+	
+				if accountName == 'bank' then
+					self.set('bank', newMoney)
+				end
+	
+				self.triggerEvent('esx:setAccountMoney', account)
 			end
-
-			self.triggerEvent('esx:setAccountMoney', account)
 		end
 	end
 
@@ -279,19 +262,13 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		local item = self.getInventoryItem(name)
 
 		if item then
+			count = ESX.Math.Round(count)
+
 			local newCount = item.count + count
-			item.count     = newCount
+			item.count = newCount
 
-			local currentWeight, itemWeight = self.getWeight(), item.weight
-			local newWeight = currentWeight + (itemWeight * count)
-
-			if newWeight > self.maxWeight then
-				TriggerClientEvent('esx:showNotification', self.source, "Vous n'avez ~r~pas assez de place~w~ dans votre inventaire.")
-				return
-			end
-
-			TriggerEvent('esx:onAddInventoryItem', self.source, item, count)
-			TriggerClientEvent('esx:addInventoryItem', self.source, item, count)
+			TriggerEvent('esx:onAddInventoryItem', self.source, item.name, item.count)
+			self.triggerEvent('esx:addInventoryItem', item.name, item.count)
 		end
 	end
 
@@ -299,13 +276,14 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		local item = self.getInventoryItem(name)
 
 		if item then
+			count = ESX.Math.Round(count)
 			local newCount = item.count - count
 
 			if newCount >= 0 then
 				item.count = newCount
 
-				TriggerEvent('esx:onRemoveInventoryItem', self.source, item, count)
-				self.triggerEvent('esx:removeInventoryItem', item, count)
+				TriggerEvent('esx:onRemoveInventoryItem', self.source, item.name, item.count)
+				self.triggerEvent('esx:removeInventoryItem', item.name, item.count)
 			end
 		end
 	end
@@ -322,8 +300,6 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 				self.removeInventoryItem(item.name, item.count - count)
 			end
 		end
-		
-		
 	end
 	
 	self.getWeight = function()
@@ -360,6 +336,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	self.setMaxWeight = function(newWeight)
 		self.maxWeight = newWeight
 		self.triggerEvent('esx:setMaxWeight', self.maxWeight)
+		end
 
 	self.setJob = function(job, grade)
 		grade = tostring(grade)
@@ -392,7 +369,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 			TriggerEvent('esx:setJob', self.source, self.job, lastJob)
 			self.triggerEvent('esx:setJob', self.job)
 		else
-			print(('es_extended: ignoring setJob for %s due to job not found!'):format(self.source))
+			print(('[es_extended] [^3WARNING^7] Ignoring invalid .setJob() usage for "%s"'):format(self.identifier))
 		end
 	end
 
@@ -432,9 +409,9 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	end
 
 	self.addWeapon = function(weaponName, ammo)
+	if not self.hasWeapon(weaponName) then
 		local weaponLabel = ESX.GetWeaponLabel(weaponName)
 
-		if not self.hasWeapon(weaponName) then
 			table.insert(self.loadout, {
 				name = weaponName,
 				ammo = ammo,
@@ -450,6 +427,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	self.addWeaponComponent = function(weaponName, weaponComponent)
 		local loadoutNum, weapon = self.getWeapon(weaponName)
 
+		if weapon then
 			local component = ESX.GetWeaponComponent(weaponName, weaponComponent)
 
 			if component then
@@ -489,7 +467,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 
 		if weaponLabel then
 			self.triggerEvent('esx:removeWeapon', weaponName, ammo)
-			self.triggerEvent('esx:removeInventoryItem', {label = weaponLabel}, 1)
+			self.triggerEvent('esx:removeInventoryItem', weaponLabel, false, true)
 		end
 	end
 
@@ -508,11 +486,10 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 						end
 					end
 
+					self.triggerEvent('esx:removeWeaponComponent', weaponName, weaponComponent)
 					self.triggerEvent('esx:removeInventoryItem', component.label, false, true)
 				end
 			end
-
-			self.triggerEvent('esx:removeWeaponComponent', weaponName, weaponComponent)
 		end
 	end
 

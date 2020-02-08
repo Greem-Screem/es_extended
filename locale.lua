@@ -19,5 +19,3 @@ end
 function _U(str, ...) -- Translate string first char uppercase
 	return tostring(_(str, ...):gsub("^%l", string.upper))
 end
-
-
