@@ -130,10 +130,21 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		end
 	end
 
-	self.getInventory = function()
-		return self.inventory
-	end
+		self.getInventory = function(minimal)
+		if minimal then
+			local items = {}
 
+			for k,v in ipairs(self.inventory) do
+				if v.count > 0 then
+					items[v.name] = v.count
+				end
+			end
+
+			return items
+		else
+			return self.inventory
+		end
+	
 	self.getJob = function()
 		return self.job
 	end

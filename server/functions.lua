@@ -56,22 +56,6 @@ ESX.SavePlayer = function(xPlayer, cb)
 		end
 	end
 
-	-- Inventory items
-	for k,v in ipairs(xPlayer.inventory) do
-		if ESX.LastPlayerData[xPlayer.source].items[v.name] ~= v.count then
-			table.insert(asyncTasks, function(cb)
-				MySQL.Async.execute('UPDATE user_inventory SET count = @count WHERE identifier = @identifier AND item = @item', {
-					['@count']      = v.count,
-					['@identifier'] = xPlayer.identifier,
-					['@item']       = v.name
-				}, function(rowsChanged)
-					cb()
-				end)
-			end)
-
-			ESX.LastPlayerData[xPlayer.source].items[v.name] = v.count
-		end
-	end
 
     --- SECONDJOB INCLUDED
 	-- Job, loadout and position
@@ -83,7 +67,8 @@ ESX.SavePlayer = function(xPlayer, cb)
 			['@job2_grade']  = xPlayer.job2.grade,
 			['@loadout']    = json.encode(xPlayer.getLoadout()),
 			['@position']   = json.encode(xPlayer.getCoords()),
-			['@identifier'] = xPlayer.identifier
+			['@identifier'] = xPlayer.identifier,
+			['@inventory'] = json.encode(xPlayer.getInventory(true))
 		}, function(rowsChanged)
 			cb()
 		end)
