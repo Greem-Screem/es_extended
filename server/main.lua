@@ -367,15 +367,17 @@ AddEventHandler('esx:giveInventoryItem', function(target, type, itemName, itemCo
 			local weaponLabel = ESX.GetWeaponLabel(itemName)
 
 			if not targetXPlayer.hasWeapon(itemName) then
-				local weaponNum, weapon = sourceXPlayer.getWeapon(itemName)
+				local _, weapon = sourceXPlayer.getWeapon(itemName)
+				local _, weaponObject = ESX.GetWeapon(itemName)
 				itemCount = weapon.ammo
 
 				sourceXPlayer.removeWeapon(itemName)
 				targetXPlayer.addWeapon(itemName, itemCount)
 
-				if itemCount > 0 then
-					sourceXPlayer.showNotification(_U('gave_weapon_withammo', weaponLabel, itemCount, targetXPlayer.name))
-					targetXPlayer.showNotification(_U('received_weapon_withammo', weaponLabel, itemCount, sourceXPlayer.name))
+			if weaponObject.ammo and itemCount > 0 then
+					local ammoLabel = weaponObject.ammo.label
+					sourceXPlayer.showNotification(_U('gave_weapon_withammo', weaponLabel, itemCount, ammoLabel, targetXPlayer.name))
+					targetXPlayer.showNotification(_U('received_weapon_withammo', weaponLabel, itemCount, ammoLabel, sourceXPlayer.name))
 				else
 						sourceXPlayer.showNotification(_U('gave_weapon', weaponLabel, targetXPlayer.name))
 					targetXPlayer.showNotification(_U('received_weapon', weaponLabel, sourceXPlayer.name))
@@ -389,17 +391,22 @@ end
 		if sourceXPlayer.hasWeapon(itemName) then
 			if targetXPlayer.hasWeapon(itemName) then
 				local weaponNum, weapon = sourceXPlayer.getWeapon(itemName)
+				local _, weaponObject = ESX.GetWeapon(itemName)
+
+				if weaponObject.ammo then
+					local ammoLabel = weaponObject.ammo.label
 
 				if weapon.ammo >= itemCount then
-					sourceXPlayer.removeWeaponAmmo(itemName, itemCount)
-					targetXPlayer.addWeaponAmmo(itemName, itemCount)
+						sourceXPlayer.removeWeaponAmmo(itemName, itemCount)
+						targetXPlayer.addWeaponAmmo(itemName, itemCount)
 
 					sourceXPlayer.showNotification(_U('gave_weapon_ammo', itemCount, weapon.label, targetXPlayer.name))
 					targetXPlayer.showNotification(_U('received_weapon_ammo', itemCount, weapon.label, sourceXPlayer.name))
 				end
 			else
-				sourceXPlayer.showNotification(_U('gave_weapon_noweapon', targetXPlayer.name))
-				targetXPlayer.showNotification(_U('received_weapon_noweapon', sourceXPlayer.name, weapon.label))
+				sourceXPlayer.showNotification(_U('gave_weapon_ammo', itemCount, ammoLabel, weapon.label, targetXPlayer.name))
+						targetXPlayer.showNotification(_U('received_weapon_ammo', itemCount, ammoLabel, weapon.label, sourceXPlayer.name))
+					end
 			end
 		end
 	end
@@ -459,17 +466,20 @@ AddEventHandler('esx:removeInventoryItem', function(type, itemName, itemCount)
 	itemName = string.upper(itemName)
 	
 		if xPlayer.hasWeapon(itemName) then
-			local weaponNum, weapon = xPlayer.getWeapon(itemName)
+			local _, weapon = xPlayer.getWeapon(itemName)
+			local _, weaponObject = ESX.GetWeapon(itemName)
+			local pickupLabel
 			xPlayer.removeWeapon(itemName)
 
-			local pickupLabel = ('~y~%s~s~ [~g~%s~s~ ammo]'):format(weapon.label, weapon.ammo)
-			ESX.CreatePickup('item_weapon', itemName, weapon.ammo, pickupLabel, playerId, weapon.components)
-
-			if weapon.ammo > 0 then
-				xPlayer.showNotification(_U('threw_weapon_ammo', weapon.label, weapon.ammo))
+			if weaponObject.ammo and weapon.ammo > 0 then
+				local ammoLabel = weaponObject.ammo.label
+				pickupLabel = ('~y~%s~s~ [~g~%s~s~ %s]'):format(weapon.label, weapon.ammo, ammoLabel)
+				xPlayer.showNotification(_U('threw_weapon_ammo', weapon.label, weapon.ammo, ammoLabel))
 			else
+				pickupLabel = ('~y~%s~s~'):format(weapon.label)
 				xPlayer.showNotification(_U('threw_weapon', weapon.label))
 			end
+			ESX.CreatePickup('item_weapon', itemName, weapon.ammo, pickupLabel, playerId, weapon.components)
 		end
 	end
 end)
