@@ -29,12 +29,12 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	self.getMoney = function()
 		return self.player.get('money')
 	end
-	
+
 	self.setCoords = function(coords)
 		self.updateCoords(coords)
 		self.triggerEvent('esx:teleport', coords)
 	end
-	
+
 	self.updateCoords = function(coords)
 		self.coords = {x = ESX.Math.Round(coords.x, 1), y = ESX.Math.Round(coords.y, 1), z = ESX.Math.Round(coords.z, 1), heading = ESX.Math.Round(coords.heading, 1)}
 	end
@@ -103,7 +103,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 				})
 			else
 				for k2,v2 in ipairs(self.accounts) do
-										if v2.name == account then
+					if v2.name == account then
 						table.insert(accounts, v2)
 						break
 					end
@@ -124,13 +124,13 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		end
 
 		for k,v in ipairs(self.accounts) do
-				if v.name == account then
+			if v.name == account then
 				return v
 			end
 		end
 	end
 
-		self.getInventory = function(minimal)
+	self.getInventory = function(minimal)
 		if minimal then
 			local items = {}
 
@@ -144,7 +144,8 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		else
 			return self.inventory
 		end
-	
+	end
+
 	self.getJob = function()
 		return self.job
 	end
@@ -165,7 +166,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 	self.setName = function(newName)
 		self.name = newName
 	end
-	
+
 	self.getMissingAccounts = function(cb)
 		MySQL.Async.fetchAll('SELECT name FROM user_accounts WHERE identifier = @identifier', {
 		['@identifier'] = self.getIdentifier()
@@ -206,7 +207,7 @@ function CreateExtendedPlayer(player, accounts, inventory, job, job2, loadout, n
 		end
 	end
 
-self.setAccountMoney = function(accountName, money)
+	self.setAccountMoney = function(accountName, money)
 		if money >= 0 then
 			local account = self.getAccount(accountName)
 
@@ -312,7 +313,7 @@ self.setAccountMoney = function(accountName, money)
 			end
 		end
 	end
-	
+
 	self.getWeight = function()
 		local inventoryWeight = 0
 
@@ -347,7 +348,7 @@ self.setAccountMoney = function(accountName, money)
 	self.setMaxWeight = function(newWeight)
 		self.maxWeight = newWeight
 		self.triggerEvent('esx:setMaxWeight', self.maxWeight)
-		end
+	end
 
 	self.setJob = function(job, grade)
 		grade = tostring(grade)
@@ -373,7 +374,7 @@ self.setAccountMoney = function(accountName, money)
 
 			if gradeObject.skin_female then
 				self.job.skin_female = json.decode(gradeObject.skin_female)
-				else
+			else
 				self.job.skin_female = {}
 			end
 
@@ -420,8 +421,8 @@ self.setAccountMoney = function(accountName, money)
 	end
 
 	self.addWeapon = function(weaponName, ammo)
-	if not self.hasWeapon(weaponName) then
-		local weaponLabel = ESX.GetWeaponLabel(weaponName)
+		if not self.hasWeapon(weaponName) then
+			local weaponLabel = ESX.GetWeaponLabel(weaponName)
 
 			table.insert(self.loadout, {
 				name = weaponName,
@@ -461,7 +462,7 @@ self.setAccountMoney = function(accountName, money)
 		end
 	end
 
-		self.setWeaponTint = function(weaponName, weaponTintIndex)
+	self.setWeaponTint = function(weaponName, weaponTintIndex)
 		local loadoutNum, weapon = self.getWeapon(weaponName)
 
 		if weapon then
@@ -493,7 +494,7 @@ self.setAccountMoney = function(accountName, money)
 				weaponLabel = v.label
 
 				for k2,v2 in ipairs(v.components) do
-				self.removeWeaponComponent(weaponName, v2)
+					self.removeWeaponComponent(weaponName, v2)
 				end
 
 				table.remove(self.loadout, k)
@@ -511,7 +512,7 @@ self.setAccountMoney = function(accountName, money)
 		local loadoutNum, weapon = self.getWeapon(weaponName)
 
 		if weapon then
-						local component = ESX.GetWeaponComponent(weaponName, weaponComponent)
+			local component = ESX.GetWeaponComponent(weaponName, weaponComponent)
 
 			if component then
 				if self.hasWeaponComponent(weaponName, weaponComponent) then
