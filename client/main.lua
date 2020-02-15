@@ -495,13 +495,17 @@ for k,v in ipairs(Config.Weapons) do
 	end
 end)
 
-	RegisterCommand('showinventory', function()
-		if not isDead and not ESX.UI.Menu.IsOpen('default', 'es_extended', 'inventory') then 
-			ESX.ShowInventory()
-	end
-end, false)
+Citizen.CreateThread(function()
+	while true do
+		Citizen.Wait(0)
 
-	RegisterKeyMapping('showinventory', _U('keymap_showinventory'), 'keyboard', 'F2')
+			if IsControlJustReleased(0, 289) then
+			if IsInputDisabled(0) and not isDead and not ESX.UI.Menu.IsOpen('default', 'es_extended', 'inventory') then
+				ESX.ShowInventory()
+			end
+		end
+	end
+end)
 
 -- Disable wanted level
 if Config.DisableWantedLevel then
