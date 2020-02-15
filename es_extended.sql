@@ -3,9 +3,10 @@ ALTER TABLE `users`
 	ADD COLUMN `job` varchar(50) NULL DEFAULT 'unemployed' AFTER `skin`,
 	ADD COLUMN `job_grade` INT NULL DEFAULT 0 AFTER `job`,
 	ADD COLUMN `job2` varchar(255) NULL DEFAULT 'unemployed2',
-    	ADD COLUMN `job2_grade` INT NULL DEFAULT 0 AFTER `job2`,
+    ADD COLUMN `job2_grade` INT NULL DEFAULT 0 AFTER `job2`,
 	ADD COLUMN `loadout` LONGTEXT NULL AFTER `job2_grade`,
-	ADD COLUMN `position` VARCHAR(53) NULL DEFAULT '{"x":-269.4,"y":-955.3,"z":31.2,"heading":205.8}' AFTER `loadout`
+	ADD COLUMN `inventory` LONGTEXT NULL AFTER `loadout`,
+	ADD COLUMN `position` VARCHAR(53) NULL DEFAULT '{"x":-269.4,"y":-955.3,"z":31.2,"heading":205.8}' AFTER `inventory`
 ;
 
 CREATE TABLE `items` (
@@ -51,15 +52,6 @@ CREATE TABLE `user_accounts` (
 	`identifier` varchar(22) NOT NULL,
 	`name` varchar(50) NOT NULL,
 	`money` double NOT NULL DEFAULT '0',
-
-	PRIMARY KEY (`id`)
-);
-
-CREATE TABLE `user_inventory` (
-	`id` int(11) NOT NULL AUTO_INCREMENT,
-	`identifier` varchar(22) NOT NULL,
-	`item` varchar(50) NOT NULL,
-	`count` int(11) NOT NULL,
 
 	PRIMARY KEY (`id`)
 );
